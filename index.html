@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zen Sudoku - Modern Web Oyunu</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Dark mode toggle JS ile <html> etiketine "dark" class'ı ekleyerek çalışır.
+        // Bu yapılandırma olmadan Tailwind sadece işletim sistemi temasını dinler
+        // ve sitedeki tema butonu hiçbir şey yapmaz — bu satırlar o hatayı çözer.
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <script>
+        // Sayfa ilk çizilmeden önce doğru temayı uygula (kısa süreli yanlış renkte
+        // açılıp sonra karanlık moda geçme "flash" sorununu engeller).
+        (function () {
+            try {
+                var savedTheme = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Custom styles & animations -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col transition-colors duration-300 dark:bg-slate-900 dark:text-slate-100">
+
+    <!-- Header / Navbar -->
+    <header class="anim-header border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-30 dark:bg-slate-900/80 dark:border-slate-800">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-xl shadow-md shadow-indigo-500/20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r fill-none bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400" data-translate="logo_title">Zen Sudoku</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium" data-translate="logo_subtitle">Zihnini Odakla, Çözümü Bul</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 md:space-x-3">
+                <!-- Language Selector -->
+                <div class="relative inline-block text-left">
+                    <select id="lang-select" class="cursor-pointer appearance-none bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs py-2.5 pl-3 pr-8 rounded-xl border border-transparent focus:outline-none transition-colors">
+                        <option value="tr">🇹🇷 TR</option>
+                        <option value="en">🇺🇸 EN</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500">
+                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                    </div>
+                </div>
+
+                <!-- Dark Mode Toggle -->
+                <button id="theme-toggle" class="p-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" title="Temayı Değiştir">
+                    <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+                <!-- Help / How to Play Button -->
+                <button id="help-btn" class="p-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" title="Nasıl Oynanır?">
+                    <i class="fa-solid fa-circle-question text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-6 md:py-10 flex flex-col lg:flex-row gap-8 justify-center items-start">
+
+        <!-- Left Side: Game Board and Status bar -->
+        <div class="anim-board-wrap w-full lg:w-auto flex-shrink-0 flex flex-col items-center">
+
+            <!-- Game Status Bar (Difficulty, Timer, Mistakes) -->
+            <div class="w-full max-w-[460px] flex items-center justify-between mb-4 bg-white dark:bg-slate-800 px-4 py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400" id="difficulty-badge">Orta</span>
+                </div>
+
+                <!-- Timer -->
+                <div class="flex items-center space-x-2 text-slate-600 dark:text-slate-300">
+                    <i class="fa-regular fa-clock text-indigo-500 animate-pulse"></i>
+                    <span id="timer" class="font-mono font-bold text-lg">00:00</span>
+                    <button id="pause-btn" class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="Oyunu Duraklat">
+                        <i id="pause-icon" class="fa-solid fa-pause"></i>
+                    </button>
+                </div>
+
+                <!-- Mistakes -->
+                <div class="flex items-center space-x-1">
+                    <span class="text-xs font-medium text-slate-400 dark:text-slate-500" data-translate="mistakes_label">Hatalar:</span>
+                    <span id="mistakes-count" class="font-bold text-slate-700 dark:text-slate-200">0 / 3</span>
+                </div>
+            </div>
+
+            <!-- The Grid Container -->
+            <div class="relative bg-white dark:bg-slate-800 p-3 md:p-4 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 max-w-[460px] w-full">
+                <!-- Board grid -->
+                <div id="sudoku-grid" class="grid grid-cols-9 gap-[1px] bg-slate-300 dark:bg-slate-700 border-2 border-slate-800 dark:border-slate-600 rounded-xl overflow-hidden aspect-square w-full">
+                    <!-- Grid cells will be generated programmatically here -->
+                </div>
+
+                <!-- Pause Overlay -->
+                <div id="pause-overlay" class="absolute inset-0 bg-white/95 dark:bg-slate-900/95 rounded-3xl flex flex-col items-center justify-center space-y-4 hidden z-20" style="opacity:0;">
+                    <div class="bg-indigo-100 dark:bg-indigo-950/50 p-4 rounded-full text-indigo-600 dark:text-indigo-400 text-3xl">
+                        <i class="fa-solid fa-play animate-ping-once"></i>
+                    </div>
+                    <h3 class="text-xl font-bold" data-translate="paused_title">Oyun Duraklatıldı</h3>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm" data-translate="paused_subtitle">Zaman donduruldu. Devam etmek için tıkla.</p>
+                    <button id="resume-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-indigo-500/20" data-translate="resume_btn">
+                        Devam Et
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid Controls -->
+            <div class="w-full max-w-[460px] grid grid-cols-4 gap-2 mt-4">
+                <button id="undo-btn" class="flex flex-col items-center justify-center p-3 bg-white hover:bg-indigo-50/50 dark:bg-slate-800 dark:hover:bg-slate-700/50 rounded-2xl border border-slate-100 dark:border-slate-800 transition group">
+                    <i class="fa-solid fa-rotate-left text-lg text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"></i>
+                    <span class="text-[10px] font-bold mt-1 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" data-translate="control_undo">Geri Al</span>
+                </button>
+
+                <button id="erase-btn" class="flex flex-col items-center justify-center p-3 bg-white hover:bg-indigo-50/50 dark:bg-slate-800 dark:hover:bg-slate-700/50 rounded-2xl border border-slate-100 dark:border-slate-800 transition group">
+                    <i class="fa-solid fa-eraser text-lg text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"></i>
+                    <span class="text-[10px] font-bold mt-1 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" data-translate="control_erase">Sil</span>
+                </button>
+
+                <button id="notes-btn" class="relative flex flex-col items-center justify-center p-3 bg-white hover:bg-indigo-50/50 dark:bg-slate-800 dark:hover:bg-slate-700/50 rounded-2xl border border-slate-100 dark:border-slate-800 transition group">
+                    <div id="notes-indicator" class="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600"></div>
+                    <i class="fa-solid fa-pencil text-lg text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"></i>
+                    <span id="notes-text" class="text-[10px] font-bold mt-1 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" data-translate="control_notes_off">Not Al (Kapalı)</span>
+                </button>
+
+                <button id="hint-btn" class="flex flex-col items-center justify-center p-3 bg-white hover:bg-indigo-50/50 dark:bg-slate-800 dark:hover:bg-slate-700/50 rounded-2xl border border-slate-100 dark:border-slate-800 transition group disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-regular fa-lightbulb text-lg text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"></i>
+                    <span id="hint-text" class="text-[10px] font-bold mt-1 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">İpucu (3)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Side: Game Controls, Difficulty, Number Pad -->
+        <div class="w-full lg:w-80 flex flex-col gap-6">
+
+            <!-- Difficulty Selector & New Game Button -->
+            <div class="anim-side-panel bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
+                <h3 class="text-sm font-bold text-slate-400 dark:text-slate-500 mb-3 uppercase tracking-wider" data-translate="difficulty_title">Zorluk Seviyesi</h3>
+
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <button data-diff="easy" class="diff-selector py-2 px-3 rounded-xl text-xs font-bold border-transparent hover:bg-slate-50 dark:hover:bg-slate-700/50" data-translate="diff_easy">Kolay</button>
+                    <button data-diff="medium" class="diff-selector py-2 px-3 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-950/30 dark:text-indigo-400 dark:border-indigo-900" data-translate="diff_medium">Orta</button>
+                    <button data-diff="hard" class="diff-selector py-2 px-3 rounded-xl text-xs font-bold border-transparent hover:bg-slate-50 dark:hover:bg-slate-700/50" data-translate="diff_hard">Zor</button>
+                </div>
+
+                <button id="new-game-btn" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold py-3.5 px-4 rounded-2xl transition shadow-lg shadow-indigo-500/20 flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-plus text-sm"></i>
+                    <span data-translate="new_game_btn">Yeni Oyun Oluştur</span>
+                </button>
+            </div>
+
+            <!-- Number Entry Pad -->
+            <div class="anim-side-panel-2 bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
+                <h3 class="text-sm font-bold text-slate-400 dark:text-slate-500 mb-3 uppercase tracking-wider" data-translate="numbers_title">Sayı Seçimi</h3>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <button data-num="1" class="num-pad-btn h-14 bg-slate-50 hover:bg-indigo-50 dark:bg-slate-700/50 dark:hover:bg-indigo-950/40 rounded-2xl text-2xl font-bold text-slate-800 dark:text-white flex items-center justify-center shadow-sm">1</button>
+                    <button data-num="2" class="num-pad-btn h-14 bg-slate-50 hover:bg-indigo-50 dark:bg-slate-700/50 dark:hover:bg-indigo-950/40 rounded-2xl text-2xl font-bold text-slate-800 dark:text-white flex items-center justify-center shadow-sm">2</button>
+                    <button data-num="3" class="num-pad-btn h-14 bg-slate-50 hover:bg-indigo-50 dark:bg-slate-700/50 dark:hover:bg-indigo-950/40 rounded-2xl text-2xl font-bold text-slate-800 dark:text-white flex items-center justify-center shadow-sm">3</button>
+                    <button data-num="4" class="num-pad-btn h-14 bg-slate-50 hover:bg-indigo-50 dark:bg-slate-700/50 dark:hover:bg-indigo-950/40 rounded-2xl text-2xl font-bold text-slate-800 dark:text-white flex items-center justify-center shadow-sm">4</button>
+                    <button data-num="5" class="num-pad-btn h-14 bg-slate-50 hover:bg-indigo-50 dark:bg-slate-700/50 dark:hover:bg-indigo-950/40 rounded-2xl text-2xl font-bold text-slate-800 dark:text-white flex items-center justify-center shadow-sm">5</button>
+                    <button data-num="6" class="num-pad-btn h-14 bg-slate-50 hover:bg-indigo-50 dark:bg-slate-700/50 dark:hover:bg-indigo-950/40 rounded-2xl text-2xl font-bold text-slate-800 dark:text-white flex items-center justify-center shadow-sm">6</button>
+                    <button data-num="7" class="num-pad-btn h-14 bg-slate-50 hover:bg-indigo-50 dark:bg-slate-700/50 dark:hover:bg-indigo-950/40 rounded-2xl text-2xl font-bold text-slate-800 dark:text-white flex items-center justify-center shadow-sm">7</button>
+                    <button data-num="8" class="num-pad-btn h-14 bg-slate-50 hover:bg-indigo-50 dark:bg-slate-700/50 dark:hover:bg-indigo-950/40 rounded-2xl text-2xl font-bold text-slate-800 dark:text-white flex items-center justify-center shadow-sm">8</button>
+                    <button data-num="9" class="num-pad-btn h-14 bg-slate-50 hover:bg-indigo-50 dark:bg-slate-700/50 dark:hover:bg-indigo-950/40 rounded-2xl text-2xl font-bold text-slate-800 dark:text-white flex items-center justify-center shadow-sm">9</button>
+                </div>
+            </div>
+
+            <!-- Stats & Records (Saved in LocalStorage) -->
+            <div class="anim-side-panel-3 bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
+                <h3 class="text-sm font-bold text-slate-400 dark:text-slate-500 mb-3 uppercase tracking-wider" data-translate="stats_title">İstatistiklerin</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-slate-500" data-translate="stats_games_won">Tamamlanan Oyunlar</span>
+                        <span id="stats-games-won" class="font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-slate-500" id="stats-best-time-label">En İyi Süre (Orta)</span>
+                        <span id="stats-best-time" class="font-mono font-bold text-indigo-600 dark:text-indigo-400">--:--</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal-overlay is-hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="modal-panel bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-700">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold" data-translate="help_title">Sudoku Nasıl Oynanır?</h3>
+                <button id="close-help-btn" class="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="space-y-3 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p><strong data-translate="help_rule_header">Temel Kural:</strong> <span data-translate="help_rule_body">9x9 boyutundaki ızgaranın her satırında, her sütununda ve her 3x3'lük alt kutusunda (blok) 1'den 9'a kadar olan sayılar sadece bir kez yer almalıdır.</span></p>
+                <div class="bg-slate-50 dark:bg-slate-700/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li data-translate="help_li1">Boş bir kareye tıklayarak seçin.</li>
+                        <li data-translate="help_li2">Sayı tuşlarını kullanarak rakamı yerleştirin.</li>
+                        <li data-translate="help_li3"><strong>Not Al:</strong> Bir kareden emin değilseniz not modunu açıp aday sayıları ekleyebilirsiniz.</li>
+                        <li data-translate="help_li4"><strong>Hata Sınırı:</strong> En fazla 3 hata yapma hakkınız vardır.</li>
+                        <li data-translate="help_li5"><strong>İpuçları:</strong> Her el en fazla 3 ipucu kullanabilirsiniz.</li>
+                    </ul>
+                </div>
+            </div>
+            <button id="help-modal-ok" class="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition" data-translate="help_ok_btn">
+                Anladım, Oyuna Dön
+            </button>
+        </div>
+    </div>
+
+    <!-- Win / Game Over Modals -->
+    <div id="status-modal" class="modal-overlay is-hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="modal-panel bg-white dark:bg-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center border border-slate-100 dark:border-slate-700">
+            <div id="modal-icon-container" class="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-3xl mb-4">
+                <!-- Icon dynamically set -->
+            </div>
+            <h3 id="modal-title" class="text-2xl font-extrabold mb-2">Başardın!</h3>
+            <p id="modal-desc" class="text-slate-500 dark:text-slate-400 text-sm mb-6">Harika bir performans gösterdin!</p>
+
+            <div id="modal-score-details" class="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-2xl mb-6 flex justify-around border border-slate-100 dark:border-slate-800">
+                <div>
+                    <span class="block text-xs text-slate-400" data-translate="modal_time">Süre</span>
+                    <span id="modal-time-spent" class="font-mono font-bold text-lg">05:23</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-slate-400" data-translate="modal_mistakes">Hatalar</span>
+                    <span id="modal-errors-made" class="font-bold text-lg text-rose-500">0</span>
+                </div>
+            </div>
+
+            <button id="modal-action-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-2xl transition shadow-lg shadow-indigo-500/20" data-translate="modal_action_btn">
+                Yeni Oyun Başlat
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="anim-footer mt-auto py-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-center text-xs text-slate-400 font-medium">
+        <p>© 2026 Zen Sudoku. <span data-translate="footer_text">Tüm hakları saklıdır.</span></p>
+    </footer>
+
+    <!-- Logic Script -->
+    <script src="script.js"></script>
+</body>
+</html>

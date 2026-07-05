@@ -1,0 +1,258 @@
+/* =========================================================
+   Zen Sudoku — Custom Styles & Animations
+   Tasarım (renkler / layout) orijinaliyle birebir aynıdır.
+   Bu dosya yalnızca hareket / animasyon katmanını ekler.
+   ========================================================= */
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Custom scrollbar (orijinalden) */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ---------------------------------------------------------
+   Keyframes
+   --------------------------------------------------------- */
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes popIn {
+    0%   { opacity: 0; transform: scale(0.85); }
+    60%  { opacity: 1; transform: scale(1.03); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes cellPop {
+    0%   { opacity: 0; transform: scale(0.4); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes valuePop {
+    0%   { opacity: 0; transform: scale(0.3); }
+    55%  { opacity: 1; transform: scale(1.25); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shakeCell {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX(3px); }
+    30%, 50%, 70% { transform: translateX(-5px); }
+    40%, 60% { transform: translateX(5px); }
+}
+
+@keyframes gentlePulseRing {
+    0%   { box-shadow: 0 0 0 0 rgba(99,102,241,0.35); }
+    70%  { box-shadow: 0 0 0 9px rgba(99,102,241,0); }
+    100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+}
+
+@keyframes trophyBounce {
+    0%   { transform: translateY(0) scale(0.6) rotate(-8deg); opacity: 0; }
+    50%  { transform: translateY(-10px) scale(1.15) rotate(4deg); opacity: 1; }
+    70%  { transform: translateY(2px) scale(0.97) rotate(-2deg); }
+    100% { transform: translateY(0) scale(1) rotate(0deg); }
+}
+
+@keyframes floatSlow {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-5px); }
+}
+
+@keyframes spinIn {
+    from { transform: rotate(-90deg) scale(0.5); opacity: 0; }
+    to   { transform: rotate(0deg) scale(1); opacity: 1; }
+}
+
+@keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes warningPulse {
+    0%, 100% { color: inherit; }
+    50%      { color: #e11d48; }
+}
+
+/* ---------------------------------------------------------
+   Entrance animations for layout sections
+   --------------------------------------------------------- */
+.anim-header       { animation: fadeInDown 0.55s cubic-bezier(.22,1,.36,1) both; }
+.anim-board-wrap    { animation: fadeInUp 0.6s 0.08s cubic-bezier(.22,1,.36,1) both; }
+.anim-side-panel    { animation: fadeInUp 0.6s 0.18s cubic-bezier(.22,1,.36,1) both; }
+.anim-side-panel-2  { animation: fadeInUp 0.6s 0.26s cubic-bezier(.22,1,.36,1) both; }
+.anim-side-panel-3  { animation: fadeInUp 0.6s 0.34s cubic-bezier(.22,1,.36,1) both; }
+.anim-footer        { animation: fadeIn 0.8s 0.4s cubic-bezier(.22,1,.36,1) both; }
+
+/* Sudoku grid cells — staggered pop-in when a new game starts */
+.cell-enter {
+    animation: cellPop 0.32s cubic-bezier(.22,1,.36,1) both;
+}
+
+/* Number placed inside a cell */
+.value-enter {
+    display: inline-block;
+    animation: valuePop 0.28s cubic-bezier(.22,1,.36,1) both;
+}
+
+/* Notes fading in */
+.notes-enter {
+    animation: fadeIn 0.25s ease both;
+}
+
+/* Wrong-answer shake (replaces the generic bounce) */
+.shake-error {
+    animation: shakeCell 0.45s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Selected cell ring pulse (subtle, one-shot) */
+.ring-pulse-once {
+    animation: gentlePulseRing 0.6s ease-out 1;
+}
+
+/* Buttons: smooth press feedback everywhere */
+button {
+    transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease,
+                box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+button:active:not(:disabled) {
+    transform: scale(0.93);
+}
+
+/* Number pad: soft hover lift */
+.num-pad-btn {
+    transition: transform 0.15s cubic-bezier(.34,1.56,.64,1), background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.num-pad-btn:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 6px 14px -6px rgba(79,70,229,0.35);
+}
+.num-pad-btn:active {
+    transform: translateY(0) scale(0.92);
+}
+
+/* Primary CTA — subtle animated sheen on hover */
+#new-game-btn {
+    position: relative;
+    overflow: hidden;
+    background-size: 200% 100%;
+}
+#new-game-btn:hover {
+    background-position: 100% 0;
+    transform: translateY(-1px);
+}
+#new-game-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+/* Difficulty selector — no layout jump, animated fill */
+.diff-selector {
+    border-width: 2px;
+    border-style: solid;
+    border-color: transparent;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+.diff-selector:hover {
+    transform: translateY(-1px);
+}
+.diff-selector:active {
+    transform: translateY(0) scale(0.96);
+}
+
+/* Grid control buttons (undo / erase / notes / hint) */
+#undo-btn, #erase-btn, #notes-btn, #hint-btn {
+    transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+#undo-btn:hover, #erase-btn:hover, #notes-btn:hover, #hint-btn:not(:disabled):hover {
+    transform: translateY(-2px);
+}
+
+/* Notes indicator dot smooth toggle */
+#notes-indicator {
+    transition: background-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+/* Theme icon flip */
+#theme-icon {
+    display: inline-block;
+    transition: transform 0.4s cubic-bezier(.68,-0.55,.27,1.55);
+}
+.theme-icon-spin {
+    animation: spinIn 0.4s cubic-bezier(.34,1.56,.64,1) both;
+}
+
+/* Help icon gentle float on hover */
+#help-btn:hover i {
+    animation: floatSlow 1.2s ease-in-out infinite;
+}
+
+/* Timer clock icon already pulses via tailwind animate-pulse (kept) */
+
+/* Mistakes counter warning pulse when close to the limit */
+.mistakes-warning {
+    animation: warningPulse 1s ease-in-out infinite;
+}
+
+/* Sudoku cell base transition (selection / highlight smoothing) */
+#sudoku-grid > div {
+    transition: background-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+
+/* ---------------------------------------------------------
+   Modal transitions (open/close, no more abrupt show/hide)
+   --------------------------------------------------------- */
+.modal-overlay {
+    transition: opacity 0.25s ease;
+}
+.modal-overlay.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+.modal-overlay:not(.is-hidden) {
+    opacity: 1;
+}
+
+.modal-panel {
+    transition: transform 0.3s cubic-bezier(.22,1,.36,1), opacity 0.25s ease;
+    transform: scale(0.92) translateY(8px);
+    opacity: 0;
+}
+.modal-overlay:not(.is-hidden) .modal-panel {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+/* Win/Game-over icon entrance */
+#modal-icon-container i {
+    display: inline-block;
+    animation: trophyBounce 0.6s cubic-bezier(.22,1,.36,1) both;
+}
+
+/* Pause overlay fade */
+#pause-overlay {
+    transition: opacity 0.25s ease;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+}
